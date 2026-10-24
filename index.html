@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#edf0ec">
+  <meta name="description" content="VÆR 北欧天气播报，实时观测、逐时天气与语音播报。">
+  <title>VÆR · 天气播报</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@300;400;500&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23edf0ec'/%3E%3Ctext x='32' y='40' text-anchor='middle' font-family='Helvetica' font-size='22' fill='%231a1e1c'%3EV%C3%86R%3C/text%3E%3C/svg%3E">
+</head>
+<body data-weather="cloudy" data-night="false">
+  <div class="grain" aria-hidden="true"></div>
+  <div class="load-line" id="loadLine" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="VÆR 天气播报首页">
+      <span class="brand-mark">VÆR</span>
+      <span class="brand-sub">北欧天气播报</span>
+    </a>
+
+    <div class="header-meta">
+      <span class="live-dot" aria-hidden="true"></span>
+      <span>LIVE OBSERVATION</span>
+    </div>
+
+    <button class="location-button" id="openCity" type="button" aria-haspopup="dialog" aria-controls="cityDialog">
+      <svg class="pin-icon" viewBox="0 0 20 20" aria-hidden="true">
+        <path d="M10 18s6-5.2 6-10.1A6 6 0 0 0 4 7.9C4 12.8 10 18 10 18Z" fill="none" stroke="currentColor" stroke-width="1"/>
+        <circle cx="10" cy="8" r="2" fill="none" stroke="currentColor" stroke-width="1"/>
+      </svg>
+      <span class="location-name" id="headerCity">上海</span>
+      <span class="location-region" id="headerRegion">中国</span>
+      <svg class="chevron" viewBox="0 0 12 12" aria-hidden="true">
+        <path d="m3 4.5 3 3 3-3" fill="none" stroke="currentColor" stroke-width="1"/>
+      </svg>
+    </button>
+  </header>
+
+  <main class="page">
+    <section class="hero" aria-labelledby="cityName">
+      <div class="hero-glow" aria-hidden="true"></div>
+
+      <div class="hero-location">
+        <p class="kicker"><span class="kicker-index">01</span> 此刻 <span class="slash">/</span> NOW</p>
+        <h1 class="city-name" id="cityName">上海</h1>
+        <p class="coordinates" id="coordinates">31.22° N · 121.46° E</p>
+
+        <div class="local-date">
+          <p id="localDate">正在校准当地日期</p>
+          <div class="clock-row">
+            <span class="clock" id="localTime">--:--</span>
+            <span class="clock-seconds" id="localSeconds">:--</span>
+            <span class="timezone" id="timezone">GMT+8</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-weather">
+        <div class="condition-row">
+          <span class="condition" id="condition">正在观测</span>
+          <span class="condition-rule" aria-hidden="true"></span>
+          <span class="feels" id="feels">体感 —°</span>
+        </div>
+
+        <div class="temperature-wrap">
+          <span class="temperature" id="temperature">—</span>
+          <sup class="degree" aria-hidden="true">°</sup>
+        </div>
+
+        <div class="temperature-meta">
+          <span>最高 <strong id="highTemp">—°</strong></span>
+          <span>最低 <strong id="lowTemp">—°</strong></span>
+          <span>降水 <strong id="rainChance">—%</strong></span>
+          <span class="observed-at" id="observedAt">等待数据</span>
+        </div>
+
+        <button class="broadcast-trigger" id="startBroadcast" type="button">
+          <span class="play-disc" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M9 6.6 18 12 9 17.4V6.6Z" fill="currentColor"/></svg>
+          </span>
+          <span class="trigger-copy">
+            <span class="trigger-eyebrow">DAILY BRIEFING</span>
+            <span class="trigger-label">收听今日天气</span>
+          </span>
+          <span class="trigger-duration" id="broadcastDuration">约 45 秒</span>
+        </button>
+      </div>
+
+      <div class="dial-wrap" aria-hidden="true">
+        <div class="dial-glow"></div>
+        <div class="dial">
+          <svg class="dial-svg" id="dialSvg" viewBox="0 0 400 400">
+            <g id="dialTicks"></g>
+            <circle class="dial-ring" cx="200" cy="200" r="142" fill="none"/>
+            <circle class="dial-ring dial-ring--inner" cx="200" cy="200" r="78" fill="none"/>
+            <g id="windNeedle">
+              <line class="wind-line" x1="200" y1="200" x2="200" y2="58"/>
+              <circle class="wind-tip" cx="200" cy="58" r="2.4"/>
+              <circle class="wind-core" cx="200" cy="200" r="3.2"/>
+            </g>
+            <text class="dial-cardinal" x="200" y="31" text-anchor="middle">N</text>
+            <text class="dial-cardinal" x="371" y="204" text-anchor="middle">E</text>
+            <text class="dial-cardinal" x="200" y="380" text-anchor="middle">S</text>
+            <text class="dial-cardinal" x="29" y="204" text-anchor="middle">W</text>
+          </svg>
+          <div class="dial-weather" id="dialWeather">
+            <div class="weather-glyph-large" id="weatherGlyphLarge"></div>
+            <span class="dial-weather-label" id="dialCondition">多云</span>
+          </div>
+        </div>
+        <div class="dial-caption">
+          <span>WIND <span id="windSpeed">— m/s</span></span>
+          <span id="windDirection">—风</span>
+        </div>
+      </div>
+
+      <div class="hero-metrics">
+        <div class="hero-metric">
+          <span class="metric-label">湿度 <em>/ HUMIDITY</em></span>
+          <strong class="metric-value" id="humidity">—<small>%</small></strong>
+        </div>
+        <div class="hero-metric">
+          <span class="metric-label">风速 <em>/ WIND</em></span>
+          <strong class="metric-value" id="windSpeedMetric">—<small>m/s</small></strong>
+        </div>
+        <div class="hero-metric">
+          <span class="metric-label">降水概率 <em>/ PRECIP.</em></span>
+          <strong class="metric-value" id="rainMetric">—<small>%</small></strong>
+        </div>
+        <div class="hero-metric">
+          <span class="metric-label">能见度 <em>/ VISIBILITY</em></span>
+          <strong class="metric-value" id="visibility">—<small>km</small></strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="section hourly-section" id="hourly" aria-labelledby="hourlyTitle">
+      <div class="section-head">
+        <div class="section-title-group">
+          <span class="section-index">02</span>
+          <h2 id="hourlyTitle">逐时观测</h2>
+          <span class="section-cn">NEXT 24 HOURS</span>
+        </div>
+        <div class="section-aside">
+          <span>当地时间</span>
+          <span class="aside-rule" aria-hidden="true"></span>
+          <span id="hourlyRange">24H</span>
+        </div>
+      </div>
+      <div class="hourly-scroller" id="hourlyScroller" tabindex="0" aria-label="未来二十四小时天气，可横向滚动">
+        <div class="hour-skeleton" aria-hidden="true"></div>
+        <div class="hour-skeleton" aria-hidden="true"></div>
+        <div class="hour-skeleton" aria-hidden="true"></div>
+        <div class="hour-skeleton" aria-hidden="true"></div>
+        <div class="hour-skeleton" aria-hidden="true"></div>
+        <div class="hour-skeleton" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <section class="section outlook-section" aria-labelledby="outlookTitle">
+      <div class="section-head">
+        <div class="section-title-group">
+          <span class="section-index">03</span>
+          <h2 id="outlookTitle">七日展望</h2>
+          <span class="section-cn">SEVEN DAY OUTLOOK</span>
+        </div>
+        <div class="section-aside">
+          <span>日出 <span id="sunriseHead">—:—</span></span>
+          <span class="aside-rule" aria-hidden="true"></span>
+          <span>日落 <span id="sunsetHead">—:—</span></span>
+        </div>
+      </div>
+
+      <div class="outlook-grid">
+        <div class="forecast" id="forecast" aria-label="未来七天天气预报">
+          <div class="forecast-skeleton"></div>
+          <div class="forecast-skeleton"></div>
+          <div class="forecast-skeleton"></div>
+          <div class="forecast-skeleton"></div>
+          <div class="forecast-skeleton"></div>
+          <div class="forecast-skeleton"></div>
+          <div class="forecast-skeleton"></div>
+        </div>
+
+        <aside class="outlook-aside">
+          <section class="air-block" aria-labelledby="airTitle">
+            <p class="micro-label" id="airTitle">空气 <span>/ AIR QUALITY</span></p>
+            <div class="air-heading">
+              <strong class="air-value" id="aqiValue">—</strong>
+              <span class="air-category" id="aqiCategory">读取中</span>
+            </div>
+            <div class="air-scale" aria-hidden="true">
+              <div class="air-scale-track">
+                <span class="air-segment"></span>
+                <span class="air-segment"></span>
+                <span class="air-segment"></span>
+                <span class="air-segment"></span>
+                <span class="air-segment"></span>
+                <span class="air-segment"></span>
+              </div>
+              <i class="air-marker" id="aqiMarker"></i>
+            </div>
+            <div class="air-scale-labels" aria-hidden="true">
+              <span>优</span><span>良</span><span>中等</span><span>较差</span><span>差</span>
+            </div>
+            <div class="air-pollutants">
+              <div class="air-row">
+                <span>PM2.5</span>
+                <div class="air-bar"><i id="pm25Bar"></i></div>
+                <strong id="pm25Value">—</strong>
+              </div>
+              <div class="air-row">
+                <span>PM10</span>
+                <div class="air-bar"><i id="pm10Bar"></i></div>
+                <strong id="pm10Value">—</strong>
+              </div>
+              <div class="air-row">
+                <span>O₃</span>
+                <div class="air-bar"><i id="ozoneBar"></i></div>
+                <strong id="ozoneValue">—</strong>
+              </div>
+            </div>
+          </section>
+
+          <section class="conditions-block" aria-labelledby="conditionsTitle">
+            <p class="micro-label" id="conditionsTitle">观测详情 <span>/ CONDITIONS</span></p>
+            <div class="condition-list">
+              <div class="condition-item"><span>气压</span><strong id="pressure">—</strong></div>
+              <div class="condition-item"><span>云量</span><strong id="cloudCover">—</strong></div>
+              <div class="condition-item"><span>阵风</span><strong id="windGust">—</strong></div>
+              <div class="condition-item"><span>紫外线</span><strong id="uvIndex">—</strong></div>
+            </div>
+          </section>
+
+          <section class="daylight-block" aria-labelledby="daylightTitle">
+            <p class="micro-label" id="daylightTitle">日照 <span>/ DAYLIGHT</span></p>
+            <div class="daylight-times">
+              <div>
+                <span>日出</span>
+                <strong id="sunrise">—:—</strong>
+              </div>
+              <div class="daylight-arc" aria-hidden="true">
+                <i id="daylightDot"></i>
+              </div>
+              <div class="daylight-end">
+                <span>日落</span>
+                <strong id="sunset">—:—</strong>
+              </div>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>数据源 <span class="footer-sep">/</span> OPEN-METEO</span>
+    <span>更新于 <time id="lastUpdated">—</time> <span class="footer-sep">·</span> 每 15 分钟刷新</span>
+    <span class="footer-brand">VÆR © 2026</span>
+  </footer>
+
+  <dialog class="city-dialog" id="cityDialog" aria-labelledby="dialogTitle">
+    <div class="dialog-shell">
+      <div class="dialog-topline">
+        <span class="micro-label">VÆR <span>/ SELECT STATION</span></span>
+        <button class="icon-button" id="closeCity" type="button" aria-label="关闭城市选择">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15" fill="none" stroke="currentColor" stroke-width="1"/></svg>
+        </button>
+      </div>
+
+      <h2 id="dialogTitle">选择观测城市</h2>
+      <label class="search-field">
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1"/>
+          <path d="m13 13 3.5 3.5" fill="none" stroke="currentColor" stroke-width="1"/>
+        </svg>
+        <input id="citySearch" type="search" placeholder="输入城市，如 上海 / Oslo" autocomplete="off" spellcheck="false" aria-label="搜索城市">
+        <span class="search-hint">↵</span>
+      </label>
+
+      <div class="quick-cities">
+        <p class="micro-label">常用观测站 <span>/ QUICK ACCESS</span></p>
+        <div class="quick-grid" id="quickCities"></div>
+      </div>
+
+      <div class="search-results" id="searchResults" aria-live="polite">
+        <p class="search-placeholder">输入中英文城市名，查找全球观测站。</p>
+      </div>
+
+      <div class="dialog-foot">
+        <span>数据精度 1–11 km</span>
+        <span>OPEN-METEO GLOBAL MODEL</span>
+      </div>
+    </div>
+  </dialog>
+
+  <div class="broadcast-dock" id="broadcastDock" role="region" aria-label="天气语音播报" aria-hidden="true">
+    <div class="broadcast-progress"><span id="broadcastProgress"></span></div>
+    <div class="dock-head">
+      <span class="on-air"><i aria-hidden="true"></i> ON AIR <span>/ 天气播报</span></span>
+      <span class="dock-city" id="dockCity">上海</span>
+      <button class="dock-stop" id="stopBroadcast" type="button">停止 <span aria-hidden="true">×</span></button>
+    </div>
+    <div class="dock-body">
+      <p class="transcript" id="transcript"></p>
+      <div class="waveform" id="waveform" aria-hidden="true"></div>
+    </div>
+    <div class="dock-foot">
+      <span id="broadcastStatus">正在接入播报</span>
+      <span>VÆR · DAILY WEATHER BRIEFING</span>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
